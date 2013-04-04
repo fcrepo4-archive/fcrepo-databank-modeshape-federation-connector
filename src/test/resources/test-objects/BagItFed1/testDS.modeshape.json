@@ -1,0 +1,19 @@
+{"properties": {
+    "http://www.jcp.org/jcr/1.0": {
+        "mixinTypes": [
+            {"$name": "{info:fedora/}datastream"},
+            {"$name": "{info:fedora/}owned"},
+            {"$name": "{info:fedora/}checksum"}
+        ],
+        "lastModified": "2007-04-05T14:30",
+        "lastModifiedBy": "<anonymous>"
+    },
+    "http://purl.org/dc/terms/": {"title": "Test Object!"},
+    "info:fedora/": {
+        "ownerId": "<anonymous>",
+        "contentType": "application/x-www-form-urlencoded",
+        "size" : 123,
+        "digestAlgorithm": "sha1",
+        "digest":"jfhglj"
+    }
+}}

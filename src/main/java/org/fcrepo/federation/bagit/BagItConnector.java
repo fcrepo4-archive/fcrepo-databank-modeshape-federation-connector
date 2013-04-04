@@ -73,9 +73,7 @@ public class BagItConnector extends FileSystemConnector {
     public void initialize(NamespaceRegistry registry,
             NodeTypeManager nodeTypeManager) throws RepositoryException,
             IOException {
-
-        super.initialize(registry, nodeTypeManager);
-
+        getLogger().trace("Initializing...");
         // Initialize the directory path field that has been set via reflection when this method is called...
         checkFieldNotNull(directoryPath, "directoryPath");
         directory = new File(directoryPath);
@@ -92,16 +90,21 @@ public class BagItConnector extends FileSystemConnector {
             throw new RepositoryException(msg);
         }
         directoryAbsolutePath = directory.getAbsolutePath();
+        getLogger().debug(
+                "Using filesystem directory: " + directoryAbsolutePath);
         if (!directoryAbsolutePath.endsWith(FILE_SEPARATOR))
             directoryAbsolutePath = directoryAbsolutePath + FILE_SEPARATOR;
         directoryAbsolutePathLength =
                 directoryAbsolutePath.length() - FILE_SEPARATOR.length(); // does NOT include the separator
 
         setExtraPropertiesStore(new BagItExtraPropertiesStore());
+        getLogger().trace("Initialized.");
     }
 
     @Override
     public Document getDocumentById(String id) {
+        getLogger().trace("Entering getDocumentById()...");
+        getLogger().debug("Received request for document: " + id);
         final File file = fileFor(id);
         if (isExcluded(file) || !file.exists()) return null;
         final boolean isRoot = isRoot(id);
@@ -109,6 +112,8 @@ public class BagItConnector extends FileSystemConnector {
         final DocumentWriter writer = newDocument(id);
         File parentFile = file.getParentFile();
         if (isResource) {
+            getLogger().debug(
+                    "Determined document: " + id + " to be a binary resource.");
             BinaryValue binaryValue = binaryFor(file);
             writer.setPrimaryType(NT_RESOURCE);
             writer.addProperty(JCR_DATA, binaryValue);
@@ -133,6 +138,8 @@ public class BagItConnector extends FileSystemConnector {
             writer.setNotQueryable();
             parentFile = file;
         } else if (file.isFile()) {
+            getLogger().debug(
+                    "Determined document: " + id + " to be a datastream.");
             writer.setPrimaryType(JcrConstants.NT_FILE);
             writer.addMixinType(FedoraJcrTypes.FEDORA_DATASTREAM);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
@@ -147,6 +154,8 @@ public class BagItConnector extends FileSystemConnector {
                     isRoot ? JCR_CONTENT_SUFFIX : id + JCR_CONTENT_SUFFIX;
             writer.addChild(childId, JCR_CONTENT);
         } else {
+            getLogger().debug(
+                    "Determined document: " + id + " to be a Fedora object.");
             final File dataDir =
                     new File(file.getAbsolutePath() + DELIMITER + "data");
             writer.setPrimaryType(NT_FOLDER);
@@ -154,6 +163,7 @@ public class BagItConnector extends FileSystemConnector {
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
                     .create(file.lastModified()));
             writer.addProperty(JCR_CREATED_BY, null); // ignored
+            // get datastreams as children
             for (File child : dataDir.listFiles()) {
                 // Only include as a datastream if we can access and read the file. Permissions might prevent us from
                 // reading the file, and the file might not exist if it is a broken symlink (see MODE-1768 for details).
@@ -177,7 +187,7 @@ public class BagItConnector extends FileSystemConnector {
         // Add the extra properties (if there are any), overwriting any properties with the same names
         // (e.g., jcr:primaryType, jcr:mixinTypes, jcr:mimeType, etc.) ...
         writer.addProperties(extraPropertiesStore().getProperties(id));
-
+        getLogger().trace("Leaving getDocumentById().");
         return writer.document();
     }
 

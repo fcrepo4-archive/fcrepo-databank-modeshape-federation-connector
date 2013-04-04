@@ -1,0 +1,28 @@
+{
+    "name" : "repo",
+    "jndiName" : "",
+    "workspaces" : {
+        "predefined" : ["fedora"],
+        "default" : "fedora",
+        "allowCreation" : true
+    },
+  "externalSources" : {
+    "filesystem-objects" : {
+      "classname" : "org.fcrepo.federation.bagit.BagItConnector",
+      "directoryPath" : "target/test-classes/test-objects",
+      "readonly" : false,
+      "cacheTtlSeconds" : 5,
+      "projections" : [ "fedora:/objects => /" ]
+     }
+    },
+    "security" : {
+        "anonymous" : {
+            "roles" : ["readonly","readwrite","admin"],
+            "useOnFailedLogin" : false
+        },
+        "providers" : [
+            { "classname" : "servlet" }
+        ]
+    },
+"node-types" : ["fedora-node-types.cnd"]
+}

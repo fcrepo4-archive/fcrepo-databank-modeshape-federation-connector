@@ -202,5 +202,9 @@ public class BagItConnector extends FileSystemConnector {
         // TODO Auto-generated method stub
 
     }
+    
+    File getBagItDirectory() {
+    	return this.directory;
+    }
 
 }

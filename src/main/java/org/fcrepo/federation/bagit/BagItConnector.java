@@ -10,6 +10,11 @@ import static org.modeshape.jcr.api.JcrConstants.NT_RESOURCE;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -68,6 +73,8 @@ public class BagItConnector extends FileSystemConnector {
     private String directoryAbsolutePath;
 
     private int directoryAbsolutePathLength;
+    
+    private ExecutorService threadPool;
 
     @Override
     public void initialize(NamespaceRegistry registry,
@@ -99,6 +106,17 @@ public class BagItConnector extends FileSystemConnector {
 
         setExtraPropertiesStore(new BagItExtraPropertiesStore(this));
         getLogger().trace("Initialized.");
+        BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1);
+        threadPool = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, workQueue);
+        getLogger().trace("Threadpool initialized.");
+        threadPool.execute(new ManifestMonitor(this));
+        getLogger().trace("Monitor thread queued.");
+    }
+    
+    @Override
+    public void shutdown() {
+    	threadPool.shutdown();
+        getLogger().trace("Threadpool shutdown.");
     }
 
     @Override
@@ -202,6 +220,19 @@ public class BagItConnector extends FileSystemConnector {
         // TODO Auto-generated method stub
 
     }
+    
+    File getBagItDirectory() {
+    	return this.directory;
+    }
+    
+    void changeManifest(File file) {
+    	// do some manifest stuff
+    }
+    
+    void changeTagFile(File file) {
+    	// do some tagFile stuff
+    }
+
     protected File fileFor( String id ) {
         return super.fileFor(id);
     }

@@ -97,7 +97,7 @@ public class BagItConnector extends FileSystemConnector {
         directoryAbsolutePathLength =
                 directoryAbsolutePath.length() - FILE_SEPARATOR.length(); // does NOT include the separator
 
-        setExtraPropertiesStore(new BagItExtraPropertiesStore());
+        setExtraPropertiesStore(new BagItExtraPropertiesStore(this));
         getLogger().trace("Initialized.");
     }
 
@@ -186,7 +186,7 @@ public class BagItConnector extends FileSystemConnector {
 
         // Add the extra properties (if there are any), overwriting any properties with the same names
         // (e.g., jcr:primaryType, jcr:mixinTypes, jcr:mimeType, etc.) ...
-        writer.addProperties(extraPropertiesStore().getProperties(id));
+        writer.addProperties(new BagItExtraPropertiesStore(this).getProperties(id));
         getLogger().trace("Leaving getDocumentById().");
         return writer.document();
     }
@@ -202,5 +202,7 @@ public class BagItConnector extends FileSystemConnector {
         // TODO Auto-generated method stub
 
     }
-
+    protected File fileFor( String id ) {
+        return super.fileFor(id);
+    }
 }

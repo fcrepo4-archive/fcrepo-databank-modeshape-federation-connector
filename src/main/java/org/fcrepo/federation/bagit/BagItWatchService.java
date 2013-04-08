@@ -2,6 +2,7 @@
 package org.fcrepo.federation.bagit;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -21,14 +22,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 
 public class BagItWatchService implements WatchService {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(BagItWatchService.class);
+    private static final Logger logger = getLogger(BagItWatchService.class);
 
     static final Pattern MANIFEST = Pattern.compile("^manifest-([^\\.]+).txt$");
 

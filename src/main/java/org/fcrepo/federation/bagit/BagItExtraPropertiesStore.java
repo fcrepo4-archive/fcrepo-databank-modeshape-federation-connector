@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.modeshape.jcr.cache.DocumentStoreException;
-import org.modeshape.jcr.federation.spi.Connector;
 import org.modeshape.jcr.federation.spi.ExtraPropertiesStore;
 import org.modeshape.jcr.value.Name;
 import org.modeshape.jcr.value.Property;

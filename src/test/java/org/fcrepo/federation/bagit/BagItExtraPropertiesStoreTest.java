@@ -2,15 +2,8 @@
 package org.fcrepo.federation.bagit;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Map;
-
-import org.modeshape.jcr.value.Name;
-import org.modeshape.jcr.value.Property;
 
 
 public class BagItExtraPropertiesStoreTest {

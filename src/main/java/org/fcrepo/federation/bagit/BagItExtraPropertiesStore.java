@@ -47,24 +47,21 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
     @Override
     public void storeProperties(String id, Map<Name, Property> properties) {
-        PrintWriter out = null;
-        try {
-            try {
-                File bagInfo = bagInfoFile(id);
-                out = new PrintWriter(new FileWriter(bagInfo));
-                for (Map.Entry<Name, Property> entry : properties.entrySet()) {
-                    Name name = entry.getKey();
-                    Property prop = entry.getValue();
-                    String line =
-                            stringFactory.create(name) + ": " +
-                                    stringFactory.create(prop);
-                    out.println(wrapLine(line));
-                }
-            } finally {
-                out.close();
+        File bagInfo = bagInfoFile(id);
+        bagInfo.delete();
+        try (PrintWriter out = new PrintWriter(new FileWriter(bagInfo))) {
+            for (Map.Entry<Name, Property> entry : properties.entrySet()) {
+                Name name = entry.getKey();
+                Property prop = entry.getValue();
+                String line =
+                        stringFactory.create(name) + ": " +
+                                stringFactory.create(prop);
+                out.println(wrapLine(line));
             }
         } catch (Exception ex) {
-            throw new DocumentStoreException(id, ex);
+            throw new DocumentStoreException(
+                    "Error in storing properties for " + id + " at " +
+                            connector.fileFor(id), ex);
         }
     }
 
@@ -80,6 +77,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
                 existing.put(name, prop);
             }
         }
+        storeProperties(id, existing);
     }
 
     @Override

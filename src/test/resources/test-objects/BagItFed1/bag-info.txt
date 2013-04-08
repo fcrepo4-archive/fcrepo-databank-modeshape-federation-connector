@@ -1,0 +1,8 @@
+Source-Organization: Fedora Futures
+External-Identifier: org.fcrepo.external.bagit.test.BagItFed1
+External-Description: Test BagIt archive for a specialized FileSystemConnector
+Internal-Sender-Identifier: src/test/resources/test-objects/BagItFed1
+Bagging-Date: 2013-4-8
+Bag-Size: 1814b
+Payload-Oxum: 1814.4
+Bag-Count: 1 of 1

@@ -1,0 +1,3 @@
+cd0d4c222a2fc85f4501d54221f86a478f2b2b96 ./bag-info.txt
+64e20240b22ee1d59175ca5d5157fa9b0247de4a ./bagit.txt
+9e5e0009a8bc034db38afe39243b49dff5c69b86 ./manifest-md5.txt

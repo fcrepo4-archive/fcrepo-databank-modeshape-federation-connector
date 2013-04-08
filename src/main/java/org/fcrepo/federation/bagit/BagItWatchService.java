@@ -45,6 +45,14 @@ public class BagItWatchService implements WatchService {
 		delegate = FileSystems.getDefault().newWatchService();
 	}
 	
+	/**
+	 * Constructor to facilitate testing
+	 * @param delegate
+	 */
+	BagItWatchService(WatchService delegate) {
+		this.delegate = delegate;
+	}
+	
     public BagItWatchService(File bagItDir) throws IOException {
     	this();
     	for (File file: bagItDir.listFiles()) {
@@ -80,13 +88,13 @@ public class BagItWatchService implements WatchService {
 	public void monitorTagFile(File input) throws IOException {
 		Path path = Paths.get(input.toURI());
 		if (!tagFiles.contains(path)) tagFiles.add(path);
-		path.register(this, ENTRY_MODIFY);
+		path.register(delegate, ENTRY_MODIFY);
 	}
 	
 	public void monitorManifest(File input) throws IOException {
 		Path path = Paths.get(input.toURI());
 		if (!manifests.contains(path)) manifests.add(path);
-		path.register(this, ENTRY_MODIFY);
+		path.register(delegate, ENTRY_MODIFY);
 	}
 	
 	boolean isManifest(String fileName) {
@@ -146,7 +154,8 @@ public class BagItWatchService implements WatchService {
 				LineNumberReader lnr = new LineNumberReader(new FileReader(input));
 				String line = null;
 				while((line = lnr.readLine()) != null) {
-					File file = new File(input.getParentFile(), line);
+					String fileName = line.split(" ")[0];
+					File file = new File(input.getParentFile(), fileName);
 					result.add(file);
 				}
 				return result;

@@ -7,9 +7,9 @@
         "allowCreation" : true
     },
   "externalSources" : {
-    "filesystem-objects" : {
+    "targetDirectory" : {
       "classname" : "org.fcrepo.federation.bagit.BagItConnector",
-      "directoryPath" : "target/test-classes/test-objects",
+      "directoryPath" : "target/test-classes/test-objects/BagItFed1",
       "readonly" : false,
       "cacheTtlSeconds" : 5,
       "projections" : [ "fedora:/objects => /" ]

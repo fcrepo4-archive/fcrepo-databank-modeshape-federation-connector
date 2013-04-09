@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+import javax.jcr.Repository;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -24,6 +27,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("/spring-test/master.xml")
 public abstract class AbstractResourceIT {
+	
+	@Inject
+	protected Repository repo;
 
     protected Logger logger;
 

@@ -85,6 +85,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
         ImmutableMap.Builder<Name, Property> properties =
                 ImmutableMap.builder();
         File bagInfo = bagInfoFile(id);
+        if (bagInfo.exists()) {
         try {
             try (BufferedReader buf =
                     new BufferedReader(new FileReader(bagInfo))) {
@@ -131,6 +132,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
             }
         } catch (Exception ex) {
             throw new DocumentStoreException(id, ex);
+        }
         }
         return properties.build();
     }

@@ -15,6 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -25,15 +26,18 @@ import org.modeshape.connector.filesystem.FileSystemConnector;
 import org.modeshape.jcr.JcrI18n;
 import org.modeshape.jcr.api.JcrConstants;
 import org.modeshape.jcr.api.nodetype.NodeTypeManager;
+import org.modeshape.jcr.cache.DocumentStoreException;
 import org.modeshape.jcr.federation.spi.DocumentChanges;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
 import org.modeshape.jcr.value.BinaryValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BagItConnector extends FileSystemConnector {
-
+	
     private static final String FILE_SEPARATOR = File.separator;
 
-    private static final String DELIMITER = File.pathSeparator;
+    private static final String DELIMITER = "/"; // NOT THE File.pathSeparator;
 
     private static final String JCR_LAST_MODIFIED = "jcr:lastModified";
 
@@ -49,7 +53,9 @@ public class BagItConnector extends FileSystemConnector {
 
     private static final String JCR_ENCODING = "jcr:encoding";
 
-    private static final String JCR_CONTENT_SUFFIX = DELIMITER + JCR_CONTENT;
+    private static final String JCR_CONTENT_SUFFIX = FILE_SEPARATOR + JCR_CONTENT;
+
+    private static final int JCR_CONTENT_SUFFIX_LENGTH = JCR_CONTENT_SUFFIX.length();
 
     /**
      * A boolean flag that specifies whether this connector should add the 'mix:mimeType' mixin to the 'nt:resource' nodes to
@@ -118,7 +124,7 @@ public class BagItConnector extends FileSystemConnector {
     	threadPool.shutdown();
         getLogger().trace("Threadpool shutdown.");
     }
-
+    
     @Override
     public Document getDocumentById(String id) {
         getLogger().trace("Entering getDocumentById()...");
@@ -175,7 +181,9 @@ public class BagItConnector extends FileSystemConnector {
             getLogger().debug(
                     "Determined document: " + id + " to be a Fedora object.");
             final File dataDir =
-                    new File(file.getAbsolutePath() + DELIMITER + "data");
+                    new File(file.getAbsolutePath() + FILE_SEPARATOR + "data");
+            getLogger().debug("searching data dir " + 
+                    dataDir.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
             writer.addMixinType(FEDORA_OBJECT);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
@@ -190,7 +198,7 @@ public class BagItConnector extends FileSystemConnector {
                     // We use identifiers that contain the file/directory name ...
                     String childName = child.getName();
                     String childId =
-                            isRoot ? DELIMITER + childName : id + DELIMITER +
+                            isRoot ? FILE_SEPARATOR + childName : id + FILE_SEPARATOR +
                                     childName;
                     writer.addChild(childId, childName);
                 }
@@ -199,7 +207,8 @@ public class BagItConnector extends FileSystemConnector {
 
         if (!isRoot) {
             // Set the reference to the parent ...
-            writer.setParents(idFor(parentFile));
+        	String parentId = idFor(parentFile);
+        	writer.setParents(parentId);
         }
 
         // Add the extra properties (if there are any), overwriting any properties with the same names
@@ -212,13 +221,13 @@ public class BagItConnector extends FileSystemConnector {
     @Override
     public void storeDocument(Document document) {
         // TODO Auto-generated method stub
-
+        getLogger().debug("storeDocument(" + document.toString() + ")");
     }
 
     @Override
     public void updateDocument(DocumentChanges documentChanges) {
         // TODO Auto-generated method stub
-
+    	getLogger().debug("updateDocument(" + documentChanges.toString() + ")");
     }
     
     File getBagItDirectory() {
@@ -233,7 +242,59 @@ public class BagItConnector extends FileSystemConnector {
     	// do some tagFile stuff
     }
 
+    @Override
     protected File fileFor( String id ) {
-        return super.fileFor(id);
+        assert id.startsWith(DELIMITER);
+        if (id.endsWith(DELIMITER)) {
+            id = id.substring(0, id.length() - DELIMITER.length());
+        }
+        if (isContentNode(id)) {
+            id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
+        }
+    	if ("".equals(id)) return this.directory; // root node
+    	
+        if (isContentNode(id)) {
+            id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
+        }
+
+    	File result = new File(this.directory, "data" + id.replaceAll(DELIMITER, FILE_SEPARATOR));
+    	getLogger().debug(result.getAbsolutePath());
+        //return super.fileFor(id);
+    	return result;
+    }
+    
+    @Override
+    protected boolean isExcluded(File file) {
+    	return !file.exists();
+    }
+    
+    @Override
+    /**
+     * DIRECTLY COPIED UNTIL WE SORT OUT HOW TO EFFECTIVELY SUBCLASS
+     * Utility method for determining the node identifier for the supplied file. Subclasses may override this method to change the
+     * format of the identifiers, but in that case should also override the {@link #fileFor(String)},
+     * {@link #isContentNode(String)}, and {@link #isRoot(String)} methods.
+     *
+     * @param file the file; may not be null
+     * @return the node identifier; never null
+     * @see #isRoot(String)
+     * @see #isContentNode(String)
+     * @see #fileFor(String)
+     */
+    protected String idFor( File file ) {
+        String path = file.getAbsolutePath();
+        if (!path.startsWith(directoryAbsolutePath)) {
+            if (directory.getAbsolutePath().equals(path)) {
+                // This is the root
+                return FILE_SEPARATOR;
+            }
+            String msg = JcrI18n.fileConnectorNodeIdentifierIsNotWithinScopeOfConnector.text(getSourceName(), directoryPath, path);
+            throw new DocumentStoreException(path, msg);
+        }
+        String id = path.substring(directoryAbsolutePathLength + 5); // data dir
+        id = id.replaceAll(Pattern.quote(FILE_SEPARATOR), DELIMITER);
+        if ("".equals(id)) id = DELIMITER;
+        assert id.startsWith(DELIMITER);
+        return id;
     }
 }

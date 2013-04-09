@@ -1,7 +1,7 @@
 
 package org.fcrepo.federation.bagit;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
@@ -59,6 +59,7 @@ public class BagItWatchService implements WatchService {
     public BagItWatchService(File bagItDir)
             throws IOException {
         this();
+        Paths.get(bagItDir.toURI()).register(delegate, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
         for (File file : bagItDir.listFiles()) {
             if (isManifest(file)) {
                 monitorManifest(file);
@@ -93,13 +94,13 @@ public class BagItWatchService implements WatchService {
     public void monitorTagFile(File input) throws IOException {
         Path path = Paths.get(input.toURI());
         if (!tagFiles.contains(path)) tagFiles.add(path);
-        path.register(delegate, ENTRY_MODIFY);
+        //path.register(delegate, ENTRY_MODIFY);
     }
 
     public void monitorManifest(File input) throws IOException {
         Path path = Paths.get(input.toURI());
         if (!manifests.contains(path)) manifests.add(path);
-        path.register(delegate, ENTRY_MODIFY);
+        //path.register(delegate, ENTRY_MODIFY);
     }
 
     boolean isManifest(String fileName) {

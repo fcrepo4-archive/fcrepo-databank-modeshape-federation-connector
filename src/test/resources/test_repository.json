@@ -9,7 +9,7 @@
   "externalSources" : {
     "targetDirectory" : {
       "classname" : "org.fcrepo.federation.bagit.BagItConnector",
-      "directoryPath" : "target/test-classes/test-objects/BagItFed1",
+      "directoryPath" : "target/test-classes/test-objects",
       "readonly" : false,
       "cacheTtlSeconds" : 5,
       "projections" : [ "fedora:/objects => /" ]
@@ -24,5 +24,5 @@
             { "classname" : "servlet" }
         ]
     },
-"node-types" : ["fedora-node-types.cnd"]
+"node-types" : ["fedora-node-types.cnd", "bagit-node-types.cnd"]
 }

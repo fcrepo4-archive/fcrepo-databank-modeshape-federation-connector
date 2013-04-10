@@ -1,0 +1,41 @@
+/*
+ * JCR node types for use with Fedora
+ */
+<jcr = 'http://www.jcp.org/jcr/1.0'>
+<nt = 'http://www.jcp.org/jcr/nt/1.0'>
+<mix = 'http://www.jcp.org/jcr/mix/1.0'>
+
+/*
+ * Friend-of-a-Friend
+ */
+<foaf = 'http://xmlns.com/foaf/0.1/'>
+
+/*
+ * Dublin Core. See:
+ * 
+ * http://dublincore.org/documents/dcmi-namespace/
+ */
+<dc = 'http://purl.org/dc/terms/'>
+
+/*
+ * Generic Fedora namespace
+ */
+<fedora = 'info:fedora/'>
+
+/*
+ * Generic Bagit namespace
+ */
+<bagit = 'info:fedora/bagit/'>
+
+[bagit:archive] > fedora:object, nt:folder mixin
+/*
+ * Unfortunately, dashes don't appear to be allowed as property names
+ */
+	- bagit:Source.Organization (STRING) COPY
+	- bagit:External.Identifier (STRING) COPY
+	- bagit:External.Description (STRING) COPY
+	- bagit:Internal.Sender.Identifier (STRING) COPY
+	- bagit:Bagging.Date (STRING) COPY
+	- bagit:Bag.Size (STRING) COPY
+	- bagit:Payload.Oxum (STRING) COPY
+	- bagit:Bag.Count (STRING) COPY

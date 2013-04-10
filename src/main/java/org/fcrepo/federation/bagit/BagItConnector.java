@@ -15,6 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jcr.NamespaceRegistry;
@@ -35,9 +36,11 @@ import org.slf4j.LoggerFactory;
 
 public class BagItConnector extends FileSystemConnector {
 	
+	private static final String BAGIT_ARCHIVE_TYPE = "bagit:archive";
+	
     private static final String FILE_SEPARATOR = File.separator;
 
-    private static final String DELIMITER = "/"; // NOT THE File.pathSeparator;
+    private static final String JCR_PATH_DELIMITER = "/"; // NOT THE File.pathSeparator;
 
     private static final String JCR_LAST_MODIFIED = "jcr:lastModified";
 
@@ -135,7 +138,30 @@ public class BagItConnector extends FileSystemConnector {
         final boolean isResource = isContentNode(id);
         final DocumentWriter writer = newDocument(id);
         File parentFile = file.getParentFile();
-        if (isResource) {
+        if (isRoot) {
+            getLogger().debug(
+                    "Determined document: " + id + " to be the projection root.");
+            writer.setPrimaryType(NT_FOLDER);
+            writer.addMixinType(FEDORA_OBJECT);
+            writer.addProperty(JCR_CREATED, factories().getDateFactory()
+                    .create(file.lastModified()));
+            writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
+                    .create(file.lastModified()));
+            writer.addProperty(JCR_CREATED_BY, null); // ignored
+            for (File child : file.listFiles()) {
+                // Only include as a datastream if we can access and read the file. Permissions might prevent us from
+                // reading the file, and the file might not exist if it is a broken symlink (see MODE-1768 for details).
+                if (child.exists() && child.canRead() &&
+                        (child.isFile() || child.isDirectory())) {
+                    // We use identifiers that contain the file/directory name ...
+                    String childName = child.getName();
+                    String childId =
+                            isRoot ? FILE_SEPARATOR + childName : id + FILE_SEPARATOR +
+                                    childName;
+                    writer.addChild(childId, childName);
+                }
+            }
+        } else if (isResource) {
             getLogger().debug(
                     "Determined document: " + id + " to be a binary resource.");
             BinaryValue binaryValue = binaryFor(file);
@@ -168,9 +194,11 @@ public class BagItConnector extends FileSystemConnector {
             writer.addMixinType(FedoraJcrTypes.FEDORA_DATASTREAM);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
                     .create(file.lastModified()));
+            writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
+                    .create(file.lastModified()));
             try {
                 writer.addProperty(JCR_CREATED_BY, Files
-                        .getOwner(file.toPath()));
+                        .getOwner(file.toPath()).getName());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -186,7 +214,10 @@ public class BagItConnector extends FileSystemConnector {
                     dataDir.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
             writer.addMixinType(FEDORA_OBJECT);
+            writer.addMixinType(BAGIT_ARCHIVE_TYPE);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
+                    .create(file.lastModified()));
+            writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
                     .create(file.lastModified()));
             writer.addProperty(JCR_CREATED_BY, null); // ignored
             // get datastreams as children
@@ -244,9 +275,9 @@ public class BagItConnector extends FileSystemConnector {
 
     @Override
     protected File fileFor( String id ) {
-        assert id.startsWith(DELIMITER);
-        if (id.endsWith(DELIMITER)) {
-            id = id.substring(0, id.length() - DELIMITER.length());
+        assert id.startsWith(JCR_PATH_DELIMITER);
+        if (id.endsWith(JCR_PATH_DELIMITER)) {
+            id = id.substring(0, id.length() - JCR_PATH_DELIMITER.length());
         }
         if (isContentNode(id)) {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
@@ -256,8 +287,14 @@ public class BagItConnector extends FileSystemConnector {
         if (isContentNode(id)) {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
         }
+        // /{bagId}/{dsId}(/{jcr:content})?
+        Pattern p = Pattern.compile("^(\\/[^\\/]+)(\\/[^\\/]+)");
+        Matcher m = p.matcher(id);
+        if (m.find()) {
+        	id = id.replace(m.group(1), m.group(1) + FILE_SEPARATOR + "data");
+        }
 
-    	File result = new File(this.directory, "data" + id.replaceAll(DELIMITER, FILE_SEPARATOR));
+    	File result = new File(this.directory, id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
     	getLogger().debug(result.getAbsolutePath());
         //return super.fileFor(id);
     	return result;
@@ -286,15 +323,17 @@ public class BagItConnector extends FileSystemConnector {
         if (!path.startsWith(directoryAbsolutePath)) {
             if (directory.getAbsolutePath().equals(path)) {
                 // This is the root
-                return FILE_SEPARATOR;
+                return JCR_PATH_DELIMITER;
             }
             String msg = JcrI18n.fileConnectorNodeIdentifierIsNotWithinScopeOfConnector.text(getSourceName(), directoryPath, path);
             throw new DocumentStoreException(path, msg);
         }
-        String id = path.substring(directoryAbsolutePathLength + 5); // data dir
-        id = id.replaceAll(Pattern.quote(FILE_SEPARATOR), DELIMITER);
-        if ("".equals(id)) id = DELIMITER;
-        assert id.startsWith(DELIMITER);
+        String id = path.substring(directoryAbsolutePathLength);
+        id = id.replace("/data/", "/"); // data dir should be removed from the id of a DS node
+        if (id.endsWith("/data")) id = id.substring(0, id.length() - 5); // might also be the parent file of a DS node
+        id = id.replaceAll(Pattern.quote(FILE_SEPARATOR), JCR_PATH_DELIMITER);
+        if ("".equals(id)) id = JCR_PATH_DELIMITER;
+        assert id.startsWith(JCR_PATH_DELIMITER);
         return id;
     }
 }

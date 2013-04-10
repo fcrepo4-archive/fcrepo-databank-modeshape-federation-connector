@@ -112,7 +112,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
                     } else {
                         // process completed value
                         if (key != null && val != null) {
-                            Name name = factories.getNameFactory().create(key);
+                            Name name = factories.getNameFactory().create("info:fedora/bagit/", key.replace('-', '.'));
                             properties.put(name, makeProperty(name, val));
                         }
                         key = null;
@@ -126,7 +126,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
                     }
                 }
                 if (key != null && val != null) {
-                    Name name = factories.getNameFactory().create(key);
+                    Name name = factories.getNameFactory().create("info:fedora/bagit/", key.replace('-', '.'));
                     properties.put(name, makeProperty(name, val));
                 }
             }

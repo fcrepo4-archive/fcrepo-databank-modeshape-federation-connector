@@ -1,13 +1,13 @@
 
 package org.fcrepo.federation.bagit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
+import gov.loc.repository.bagit.Bag.BagConstants;
+import gov.loc.repository.bagit.BagFile;
+import gov.loc.repository.bagit.BagInfoTxtWriter;
+import gov.loc.repository.bagit.impl.BagInfoTxtImpl;
+import gov.loc.repository.bagit.utilities.namevalue.NameValueReader.NameValue;
+
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.Map;
 
 import org.fcrepo.federation.bagit.functions.GetBagInfoTxtWriter;
@@ -15,17 +15,8 @@ import org.modeshape.jcr.value.Name;
 import org.modeshape.jcr.value.NameFactory;
 import org.modeshape.jcr.value.Property;
 import org.modeshape.jcr.value.PropertyFactory;
-import org.modeshape.jcr.value.StringFactory;
-import org.modeshape.jcr.value.ValueFactories;
 
 import com.google.common.collect.ImmutableMap;
-
-import gov.loc.repository.bagit.Bag.BagConstants;
-import gov.loc.repository.bagit.BagFile;
-import gov.loc.repository.bagit.BagInfoTxtWriter;
-import gov.loc.repository.bagit.impl.BagInfoTxtImpl;
-import gov.loc.repository.bagit.impl.BagInfoTxtWriterImpl;
-import gov.loc.repository.bagit.utilities.namevalue.NameValueReader.NameValue;
 
 public class BagInfo extends BagInfoTxtImpl {
 

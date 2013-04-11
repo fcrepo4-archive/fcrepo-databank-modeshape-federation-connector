@@ -6,9 +6,6 @@ import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
 import static org.modeshape.jcr.api.JcrConstants.JCR_DATA;
 import static org.modeshape.jcr.api.JcrConstants.NT_FOLDER;
 import static org.modeshape.jcr.api.JcrConstants.NT_RESOURCE;
-
-import gov.loc.repository.bagit.Bag.BagConstants;
-import gov.loc.repository.bagit.BagFile;
 import gov.loc.repository.bagit.impl.FileBagFile;
 import gov.loc.repository.bagit.v0_97.impl.BagConstantsImpl;
 
@@ -38,8 +35,6 @@ import org.modeshape.jcr.federation.spi.DocumentWriter;
 import org.modeshape.jcr.value.BinaryValue;
 import org.modeshape.jcr.value.PropertyFactory;
 import org.modeshape.jcr.value.ValueFactories;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BagItConnector extends FileSystemConnector {
 	

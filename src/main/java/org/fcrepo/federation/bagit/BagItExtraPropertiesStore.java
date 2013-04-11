@@ -3,7 +3,6 @@ package org.fcrepo.federation.bagit;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 

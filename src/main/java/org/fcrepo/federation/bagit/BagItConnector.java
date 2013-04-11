@@ -7,6 +7,11 @@ import static org.modeshape.jcr.api.JcrConstants.JCR_DATA;
 import static org.modeshape.jcr.api.JcrConstants.NT_FOLDER;
 import static org.modeshape.jcr.api.JcrConstants.NT_RESOURCE;
 
+import gov.loc.repository.bagit.Bag.BagConstants;
+import gov.loc.repository.bagit.BagFile;
+import gov.loc.repository.bagit.impl.FileBagFile;
+import gov.loc.repository.bagit.v0_97.impl.BagConstantsImpl;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +36,8 @@ import org.modeshape.jcr.cache.DocumentStoreException;
 import org.modeshape.jcr.federation.spi.DocumentChanges;
 import org.modeshape.jcr.federation.spi.DocumentWriter;
 import org.modeshape.jcr.value.BinaryValue;
+import org.modeshape.jcr.value.PropertyFactory;
+import org.modeshape.jcr.value.ValueFactories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -300,6 +307,12 @@ public class BagItConnector extends FileSystemConnector {
     	return result;
     }
     
+    protected File bagInfoFileFor(String id) {
+        File dir = fileFor(id);
+        File result = new File(dir, "bag-info.txt");
+        return (result.exists()) ? result : null;
+    }
+    
     @Override
     protected boolean isExcluded(File file) {
     	return !file.exists();
@@ -335,5 +348,21 @@ public class BagItConnector extends FileSystemConnector {
         if ("".equals(id)) id = JCR_PATH_DELIMITER;
         assert id.startsWith(JCR_PATH_DELIMITER);
         return id;
+    }
+    
+    protected ValueFactories getValueFactories() {
+    	return getContext().getValueFactories();
+    }
+    
+    protected PropertyFactory getPropertyFactory() {
+    	return getContext().getPropertyFactory();
+    }
+    
+    protected BagInfo getBagInfo(String id) {
+    	File bagInfoFile = bagInfoFileFor(id);
+    	if (bagInfoFile == null) return null;
+    	// really need to get the version from bagit.txt, but start with hard-coding
+    	BagInfo result = new BagInfo(id, new FileBagFile(bagInfoFile.getAbsolutePath(), bagInfoFile), getPropertyFactory(), getValueFactories(), new BagConstantsImpl());
+    	return result;
     }
 }

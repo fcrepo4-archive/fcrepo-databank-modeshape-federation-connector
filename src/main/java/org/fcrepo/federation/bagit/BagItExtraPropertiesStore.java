@@ -4,6 +4,7 @@ package org.fcrepo.federation.bagit;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import org.modeshape.jcr.cache.DocumentStoreException;
@@ -25,7 +26,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
     private BagItConnector connector;
     
-    private static final Map<Name, Property> EMPTY = emptyMap();
+    protected static final Map<Name, Property> EMPTY = emptyMap();
     
     protected BagItExtraPropertiesStore(BagItConnector connector) {
         this.connector = connector;
@@ -33,15 +34,19 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
     @Override
     public void storeProperties(String id, Map<Name, Property> properties) {
-        try {
-            BagInfo bagInfo = connector.getBagInfo(id);
-            if (bagInfo == null) return;
-            bagInfo.setProperties(properties);
-            bagInfo.save();
+        storeProperties(connector.getBagInfo(id), properties);
+    }
+    
+    private void storeProperties(BagInfo bagInfo, Map<Name, Property> properties) {
+    	if (bagInfo == null) return;
+    	
+    	try{
+    		bagInfo.setProperties(properties);
+    		bagInfo.save();
         } catch (Exception ex) {
             throw new DocumentStoreException(
-                    "Error in storing properties for " + id + " at " +
-                            connector.fileFor(id), ex);
+                    "Error in storing properties for " + bagInfo.bagID + " at " +
+                            bagInfo.getFilepath(), ex);
         }
     }
 
@@ -59,7 +64,7 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
                 existing.put(name, prop);
             }
         }
-        storeProperties(id, existing);
+        storeProperties(bagInfo, existing);
     }
 
     @Override
@@ -81,11 +86,19 @@ public class BagItExtraPropertiesStore implements ExtraPropertiesStore {
 
     @Override
     public boolean removeProperties(String id) {
-        File bagInfo = connector.bagInfoFileFor(id);
+        BagInfo bagInfo = connector.getBagInfo(id);
         if (!bagInfo.exists()) {
             return false;
         } else {
-            return bagInfo.delete();
+            try {
+				boolean result = bagInfo.delete();
+				bagInfo.save();
+				return result;
+			} catch (IOException ex) {
+	            throw new DocumentStoreException(
+	                    "Error in removing properties for " + bagInfo.bagID + " at " +
+	                            bagInfo.getFilepath(), ex);
+			}
         }
     }
     

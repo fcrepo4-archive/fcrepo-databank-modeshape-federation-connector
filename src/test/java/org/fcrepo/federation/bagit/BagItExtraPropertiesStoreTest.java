@@ -1,14 +1,22 @@
 
 package org.fcrepo.federation.bagit;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.Map;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.matchers.Equals;
 import org.modeshape.jcr.value.Name;
 import org.modeshape.jcr.value.Property;
 import org.modeshape.jcr.value.PropertyFactory;
@@ -33,26 +41,54 @@ public class BagItExtraPropertiesStoreTest {
 
     @Test
     public void testRead() {
-        // TODO read a properties file from disk
+        BagInfo mockBI = getMockBagInfo();
+        when(connector.getBagInfo("/foo")).thenReturn(mockBI);
         Map<Name, Property> props = store.getProperties("/foo");
-        verify(connector).getBagInfo("/foo");        
+        verify(connector).getBagInfo("/foo");
+        verify(mockBI).getProperties();
+        props = store.getProperties("/non/existent");
+        assertEquals(BagItExtraPropertiesStore.EMPTY, props);
     }
-
-    /*
+    
+    @Test
+    public void testUpdateProperties() throws IOException {
+        BagInfo mockBI = getMockBagInfo();
+        when(connector.getBagInfo("/foo")).thenReturn(mockBI);
+        Map<Name, Property> mockProps = mock(Map.class);
+        store.updateProperties("/foo", mockProps);
+        verify(connector).getBagInfo("/foo");
+        verify(mockBI).setProperties(any(Map.class));
+        verify(mockBI).save();
+        verify(mockBI).getProperties();
+    }
 
     @Test
-    public void testWrite() {
-        // TODO write a properties file to disk then read it back
+    public void testStoreProperties() throws IOException {
+        BagInfo mockBI = getMockBagInfo();
+        when(connector.getBagInfo("/foo")).thenReturn(mockBI);
+        Map<Name, Property> mockProps = mock(Map.class);
+        store.storeProperties("/foo", mockProps);
+        verify(connector).getBagInfo("/foo");
+        verify(mockBI).setProperties(any(Map.class));
+        verify(mockBI).save();
     }
 
-    @Test
-    public void testUpdate() {
-        // TODO update a properties file and make sure new props saved, delete dprops removed
-    }
 
     @Test
-    public void testRemove() {
-        // TODO remove a properties file
+    public void testRemove() throws IOException {
+        BagInfo mockBI = getMockBagInfo();
+        when(mockBI.exists()).thenReturn(true);
+        when(connector.getBagInfo("/foo")).thenReturn(mockBI);
+        Map<Name, Property> mockProps = mock(Map.class);
+        store.removeProperties("/foo");
+        verify(connector).getBagInfo("/foo");
+        verify(mockBI).delete();
+        verify(mockBI).save();
     }
-*/
+
+    private BagInfo getMockBagInfo() {
+    	BagInfo mock = mock(BagInfo.class);
+    	return mock;
+    }
+
 }

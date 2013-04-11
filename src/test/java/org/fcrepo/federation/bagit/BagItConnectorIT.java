@@ -2,12 +2,15 @@
 package org.fcrepo.federation.bagit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.http.HttpResponse;
@@ -27,6 +30,12 @@ public class BagItConnectorIT extends AbstractResourceIT {
 		Session session = (Session)repo.login();
 		Node node = session.getNode("/objects/BagItFed1");
 		logger.info("Got node at " + node.getPath());
+		PropertyIterator properties = node.getProperties("bagit:*");
+		assertTrue(properties.hasNext());
+		// Bag-Count: 1 of 1
+		Property property = node.getProperty("bagit:Bag.Count");
+		assertNotNull(property);
+		assertEquals("1 of 1", property.getString());
 		NodeIterator nodes = node.getNodes();
 		assertTrue("/objects/testDS had no child nodes!", nodes.hasNext());
 		Node child = nodes.nextNode();

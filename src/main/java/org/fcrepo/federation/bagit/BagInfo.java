@@ -68,7 +68,9 @@ public class BagInfo extends BagInfoTxtImpl {
     }
     
     public boolean delete() throws IOException {
-    	return new File(this.getFilepath()).delete();
+    	int len = getProperties().size();
+    	setProperties(BagItExtraPropertiesStore.EMPTY);
+    	return len > 0;
     }
 
     private Property makeProperty(Name name, String value) {

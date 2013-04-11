@@ -10,7 +10,9 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Map;
 
+import org.fcrepo.federation.bagit.functions.GetBagInfoTxtWriter;
 import org.modeshape.jcr.value.Name;
+import org.modeshape.jcr.value.NameFactory;
 import org.modeshape.jcr.value.Property;
 import org.modeshape.jcr.value.PropertyFactory;
 import org.modeshape.jcr.value.StringFactory;
@@ -20,7 +22,9 @@ import com.google.common.collect.ImmutableMap;
 
 import gov.loc.repository.bagit.Bag.BagConstants;
 import gov.loc.repository.bagit.BagFile;
+import gov.loc.repository.bagit.BagInfoTxtWriter;
 import gov.loc.repository.bagit.impl.BagInfoTxtImpl;
+import gov.loc.repository.bagit.impl.BagInfoTxtWriterImpl;
 import gov.loc.repository.bagit.utilities.namevalue.NameValueReader.NameValue;
 
 public class BagInfo extends BagInfoTxtImpl {
@@ -32,43 +36,40 @@ public class BagInfo extends BagInfoTxtImpl {
     
     private PropertyFactory m_propertyFactory;
     
-    private ValueFactories m_valueFactory;
-    
-    private StringFactory m_stringFactory;
-    
+    private NameFactory m_nameFactory;
+        
     private static final long serialVersionUID = 1L;
+    
+    static GetBagInfoTxtWriter getBagInfoTxtWriter = new GetBagInfoTxtWriter();
 
-    public BagInfo(String bagID, BagFile bagFile, PropertyFactory propertyFactory, ValueFactories valueFactory, BagConstants bagConstants) {
+    public BagInfo(
+    		String bagID, BagFile bagFile, PropertyFactory propertyFactory,
+    		NameFactory nameFactory, BagConstants bagConstants) {
         super(bagFile, bagConstants);
         this.bagID = bagID;
         m_propertyFactory = propertyFactory;
-        m_valueFactory = valueFactory;
-        m_stringFactory = valueFactory.getStringFactory();
-    }
-    
-    private OutputStream getOutputStream() throws FileNotFoundException {
-    	return new FileOutputStream(new File(this.getFilepath()));
+        m_nameFactory = nameFactory;
     }
     
     /**
      * Stores this bag-info.txt into its bag.
      */
     public void save() throws IOException {
-        try (PrintWriter out = new PrintWriter(getOutputStream())) {
+    	;
+        try (BagInfoTxtWriter writer = getBagInfoTxtWriter.apply(this.getFilepath())) {
             Map<Name, Property> properties = getProperties();
-        	for (Map.Entry<Name, Property> entry : properties.entrySet()) {
-                Name name = entry.getKey();
-                Property prop = entry.getValue();
-                String line =
-                        m_stringFactory.create(name) + ": " +
-                                m_stringFactory.create(prop);
-                out.println(wrapLine(line));
+        	for (Property jcrProp : properties.values()) {
+                NameValue prop = toBagitProperty(jcrProp);
+                writer.write(prop.getName(), prop.getValue());
             }
         }
     }
     
     public boolean delete() throws IOException {
     	int len = getProperties().size();
+    	for (String key: this.keySet()) {
+    		this.removeAllList(key);
+    	}
     	setProperties(BagItExtraPropertiesStore.EMPTY);
     	return len > 0;
     }
@@ -78,7 +79,7 @@ public class BagInfo extends BagInfoTxtImpl {
     }
     
     private Name toPropertyName(NameValue bagitProperty) {
-        return m_valueFactory.getNameFactory().create("info:fedora/bagit/", bagitProperty.getName().replace('-', '.'));
+        return m_nameFactory.create("info:fedora/bagit/", bagitProperty.getName().replace('-', '.'));
     }
     
     private Property toJcrProperty(NameValue bagitProperty) {
@@ -103,33 +104,11 @@ public class BagInfo extends BagInfoTxtImpl {
     }
     
     public void setProperties(Map<Name, Property> properties) {
-    	for(Entry<Name, Property> entry: properties.entrySet()) {
-    		NameValue bagitProperty = toBagitProperty(entry.getValue());
+    	for(Property entry: properties.values()) {
+    		NameValue bagitProperty = toBagitProperty(entry);
     		this.removeAllList(bagitProperty.getName());
     		this.putList(bagitProperty);
     	}
-    }
-
-    private static String wrapLine(String value) {
-        if (value == null || value.length() < 79) {
-            return value;
-        }
-        StringBuffer wrapped = new StringBuffer();
-        String[] words = value.split(" ");
-        StringBuffer line = new StringBuffer(words[0]);
-        for (int i = 1; i < words.length; i++) {
-            if (words[i].length() + line.length() < 79) {
-                line.append(" " + words[i]);
-            } else {
-                wrapped.append(line.toString() + "\n");
-                line.setLength(0);
-                line.append("     " + words[i]);
-            }
-        }
-        if (line.length() > 0) {
-            wrapped.append(line.toString());
-        }
-        return wrapped.toString();
     }
 
 }

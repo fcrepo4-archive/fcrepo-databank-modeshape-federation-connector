@@ -362,7 +362,10 @@ public class BagItConnector extends FileSystemConnector {
     	File bagInfoFile = bagInfoFileFor(id);
     	if (bagInfoFile == null) return null;
     	// really need to get the version from bagit.txt, but start with hard-coding
-    	BagInfo result = new BagInfo(id, new FileBagFile(bagInfoFile.getAbsolutePath(), bagInfoFile), getPropertyFactory(), getValueFactories(), new BagConstantsImpl());
+    	ValueFactories vf = getValueFactories();
+    	BagInfo result = 
+    			new BagInfo(id, new FileBagFile(bagInfoFile.getAbsolutePath(), bagInfoFile),
+    					getPropertyFactory(), vf.getNameFactory(), new BagConstantsImpl());
     	return result;
     }
 }

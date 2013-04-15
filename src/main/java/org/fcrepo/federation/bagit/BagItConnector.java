@@ -75,39 +75,52 @@ public class BagItConnector extends FileSystemConnector {
      */
     private String directoryPath;
 
-    private File directory;
+    private File m_directory;
 
     /**
      * A string that is created in the {@link #initialize(NamespaceRegistry, NodeTypeManager)} method that represents the absolute
-     * path to the {@link #directory}. This path is removed from an absolute path of a file to obtain the ID of the node.
+     * path to the {@link #m_directory}. This path is removed from an absolute path of a file to obtain the ID of the node.
      */
     private String directoryAbsolutePath;
 
     private int directoryAbsolutePathLength;
     
     private ExecutorService threadPool;
+    
+    DocumentWriterFactory m_writerFactory;
+    
+    public void setDirectoryPath(String directoryPath) {
+    	this.directoryPath = directoryPath;
+    	m_directory = new File(directoryPath);
+    }
+    
+    public void setDirectory(File directory) {
+    	m_directory = directory;
+    	this.directoryPath = directory.getAbsolutePath();
+    }
 
     @Override
     public void initialize(NamespaceRegistry registry,
             NodeTypeManager nodeTypeManager) throws RepositoryException,
             IOException {
-        getLogger().trace("Initializing...");
+        getLogger().trace("Initializing at " + this.directoryPath + " ...");
         // Initialize the directory path field that has been set via reflection when this method is called...
+        m_writerFactory = new DocumentWriterFactory(translator());
         checkFieldNotNull(directoryPath, "directoryPath");
-        directory = new File(directoryPath);
-        if (!directory.exists() || !directory.isDirectory()) {
+        m_directory = new File(directoryPath);
+        if (!m_directory.exists() || !m_directory.isDirectory()) {
             String msg =
                     JcrI18n.fileConnectorTopLevelDirectoryMissingOrCannotBeRead
                             .text(getSourceName(), "directoryPath");
             throw new RepositoryException(msg);
         }
-        if (!directory.canRead() && !directory.setReadable(true)) {
+        if (!m_directory.canRead() && !m_directory.setReadable(true)) {
             String msg =
                     JcrI18n.fileConnectorTopLevelDirectoryMissingOrCannotBeRead
                             .text(getSourceName(), "directoryPath");
             throw new RepositoryException(msg);
         }
-        directoryAbsolutePath = directory.getAbsolutePath();
+        directoryAbsolutePath = m_directory.getAbsolutePath();
         getLogger().debug(
                 "Using filesystem directory: " + directoryAbsolutePath);
         if (!directoryAbsolutePath.endsWith(FILE_SEPARATOR))
@@ -241,7 +254,7 @@ public class BagItConnector extends FileSystemConnector {
         if (!isRoot) {
             // Set the reference to the parent ...
         	String parentId = idFor(parentFile);
-        	writer.setParents(parentId);
+        	writer.setParent(parentId);
         }
 
         // Add the extra properties (if there are any), overwriting any properties with the same names
@@ -249,6 +262,11 @@ public class BagItConnector extends FileSystemConnector {
         writer.addProperties(new BagItExtraPropertiesStore(this).getProperties(id));
         getLogger().trace("Leaving getDocumentById().");
         return writer.document();
+    }
+    
+    @Override
+    public DocumentWriter newDocument(String id) {
+    	return m_writerFactory.getDocumentWriter(id);
     }
 
     @Override
@@ -264,7 +282,7 @@ public class BagItConnector extends FileSystemConnector {
     }
     
     File getBagItDirectory() {
-    	return this.directory;
+    	return this.m_directory;
     }
     
     void changeManifest(File file) {
@@ -284,7 +302,7 @@ public class BagItConnector extends FileSystemConnector {
         if (isContentNode(id)) {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
         }
-    	if ("".equals(id)) return this.directory; // root node
+    	if ("".equals(id)) return this.m_directory; // root node
     	
         if (isContentNode(id)) {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
@@ -296,7 +314,7 @@ public class BagItConnector extends FileSystemConnector {
         	id = id.replace(m.group(1), m.group(1) + FILE_SEPARATOR + "data");
         }
 
-    	File result = new File(this.directory, id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
+    	File result = new File(this.m_directory, id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
     	getLogger().debug(result.getAbsolutePath());
         //return super.fileFor(id);
     	return result;
@@ -310,6 +328,7 @@ public class BagItConnector extends FileSystemConnector {
     
     @Override
     protected boolean isExcluded(File file) {
+    	//TODO this should check the data manifest
     	return !file.exists();
     }
     
@@ -326,10 +345,10 @@ public class BagItConnector extends FileSystemConnector {
      * @see #isContentNode(String)
      * @see #fileFor(String)
      */
-    protected String idFor( File file ) {
+    protected String idFor( File file ) { System.out.println( "idFor(\"" + file.getAbsolutePath());
         String path = file.getAbsolutePath();
         if (!path.startsWith(directoryAbsolutePath)) {
-            if (directory.getAbsolutePath().equals(path)) {
+            if (m_directory.getAbsolutePath().equals(path)) {
                 // This is the root
                 return JCR_PATH_DELIMITER;
             }
@@ -342,6 +361,7 @@ public class BagItConnector extends FileSystemConnector {
         id = id.replaceAll(Pattern.quote(FILE_SEPARATOR), JCR_PATH_DELIMITER);
         if ("".equals(id)) id = JCR_PATH_DELIMITER;
         assert id.startsWith(JCR_PATH_DELIMITER);
+        System.out.println("idFor = " + id);
         return id;
     }
     

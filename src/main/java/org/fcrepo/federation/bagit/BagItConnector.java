@@ -206,14 +206,17 @@ public class BagItConnector extends FileSystemConnector {
             getLogger().debug(
                     "Determined document: " + id + " to be a datastream.");
             writer.setPrimaryType(JcrConstants.NT_FILE);
+            writer.addMixinType(FedoraJcrTypes.FEDORA_OWNED);
             writer.addMixinType(FedoraJcrTypes.FEDORA_DATASTREAM);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
                     .create(file.lastModified()));
             writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
                     .create(file.lastModified()));
             try {
-                writer.addProperty(JCR_CREATED_BY, Files
-                        .getOwner(file.toPath()).getName());
+            	String owner = Files
+                        .getOwner(file.toPath()).getName();
+                writer.addProperty(JCR_CREATED_BY, owner);
+                writer.addProperty(FedoraJcrTypes.FEDORA_OWNERID, owner);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -229,12 +232,21 @@ public class BagItConnector extends FileSystemConnector {
                     dataDir.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
             writer.addMixinType(FEDORA_OBJECT);
+            writer.addMixinType(FedoraJcrTypes.FEDORA_OWNED);
             writer.addMixinType(BAGIT_ARCHIVE_TYPE);
             writer.addProperty(JCR_CREATED, factories().getDateFactory()
                     .create(file.lastModified()));
             writer.addProperty(JCR_LAST_MODIFIED, factories().getDateFactory()
                     .create(file.lastModified()));
-            writer.addProperty(JCR_CREATED_BY, null); // ignored
+            try {
+        	String owner = Files
+                    .getOwner(file.toPath()).getName();
+            writer.addProperty(JCR_CREATED_BY, owner); // required
+            writer.addProperty(FedoraJcrTypes.FEDORA_OWNERID, owner);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            writer.addProperty(FedoraJcrTypes.DC_IDENTIFIER, id);
             // get datastreams as children
             for (File child : dataDir.listFiles()) {
                 // Only include as a datastream if we can access and read the file. Permissions might prevent us from
@@ -345,7 +357,7 @@ public class BagItConnector extends FileSystemConnector {
      * @see #isContentNode(String)
      * @see #fileFor(String)
      */
-    protected String idFor( File file ) { System.out.println( "idFor(\"" + file.getAbsolutePath());
+    protected String idFor( File file ) {
         String path = file.getAbsolutePath();
         if (!path.startsWith(directoryAbsolutePath)) {
             if (m_directory.getAbsolutePath().equals(path)) {

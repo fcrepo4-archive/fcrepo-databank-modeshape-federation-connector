@@ -1,0 +1,4 @@
+8c3803b81876019d6c78edbbf285d60afa65b2ed  ./data/testDS
+02b4d056fcb55d2efef1d8d9a3d9e62505392021  ./data/testDS2
+a2bb82a340cafb9a1a16611655f60416678ed0d1  ./data/testDS2.modeshape.json
+f68dc82202cd0ca1a0d37fbe88617a7bfa4ce100  ./data/testDS.modeshape.json

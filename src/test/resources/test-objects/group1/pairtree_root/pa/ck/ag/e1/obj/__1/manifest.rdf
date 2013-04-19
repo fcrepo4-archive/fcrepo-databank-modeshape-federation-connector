@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:dcterms="http://purl.org/dc/terms/"
+   xmlns:ore="http://www.openarchives.org/ore/terms/"
+   xmlns:oxds="http://vocab.ox.ac.uk/dataset/schema#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <rdf:Description rdf:about="http://futures6.bodleian.ox.ac.uk/group1/datasets/package1">
+    <ore:aggregates rdf:resource="http://futures6.bodleian.ox.ac.uk/group1/datasets/package1/files.zip"/>
+    <rdf:type rdf:resource="http://vocab.ox.ac.uk/dataset/schema#DataSet"/>
+    <dcterms:modified>2013-04-18 11:12:36.793276</dcterms:modified>
+    <dcterms:publisher>Fedora Futures</dcterms:publisher>
+    <oxds:isEmbargoed>True</oxds:isEmbargoed>
+    <oxds:currentVersion>1</oxds:currentVersion>
+    <dcterms:identifier>package1</dcterms:identifier>
+    <dcterms:license>CC0 1.0 Universal (CC0 1.0). See http://creativecommons.org/publicdomain/zero/1.0/legalcode</dcterms:license>
+    <dcterms:mediator>admin</dcterms:mediator>
+    <oxds:embargoedUntil>2083-04-18T11:09:31.895096</oxds:embargoedUntil>
+    <dcterms:created>2013-04-18 11:09:31.898336</dcterms:created>
+  </rdf:Description>
+</rdf:RDF>
+

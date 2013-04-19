@@ -1,0 +1,8 @@
+Source-Organization: Fedora Futures
+External-Identifier: org.fcrepo.external.databank.test.package1
+External-Description: Test Databank archive for a specialized FileSystemConnector
+Internal-Sender-Identifier: src/test/resources/test-objects/group1/pairtree_root/pa/ck/ag/e1/obj
+Bagging-Date: 2013-04-18
+Bag-Size: 1814b
+Payload-Oxum: 1814.4
+Bag-Count: 1 of 1

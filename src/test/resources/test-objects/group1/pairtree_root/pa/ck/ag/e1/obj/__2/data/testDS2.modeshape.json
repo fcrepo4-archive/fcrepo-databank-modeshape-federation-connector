@@ -1,0 +1,37 @@
+{"properties": {
+    "http://www.jcp.org/jcr/1.0": {
+        "createdBy": "<anonymous>",
+        "isCheckedOut": true,
+        "uuid": "b0e430beaa9871/testObject/testDS2",
+        "lastModified": "2007-04-05T14:30",
+        "lastModifiedBy": "<anonymous>",
+        "predecessors": [{
+            "$ref": "87a0a8c317f1e7c03a21cf-751a-426d-9c32-1e6d5b504f9e",
+            "$foreign": true
+        }],
+        "baseVersion": {
+            "$ref": "87a0a8c317f1e7c03a21cf-751a-426d-9c32-1e6d5b504f9e",
+            "$foreign": true
+        },
+        "mixinTypes": [
+            {"$name": "{info:fedora/}datastream"},
+            {"$name": "{info:fedora/}owned"},
+            {"$name": "{info:fedora/}checksum"}
+        ],
+        "versionHistory": {
+            "$ref": "87a0a8c317f1e7/testObject/testDS2",
+            "$foreign": true
+        }
+    },
+    "http://purl.org/dc/terms/": {"identifier": [
+        "b0e430beaa9871/testObject/testDS2",
+        "testObject/testDS2"
+    ]},
+    "info:fedora/": {
+        "ownerId": "<anonymous>",
+        "contentType": "application/x-www-form-urlencoded",
+        "size": 123,
+        "digestAlgorithm": "sha1",
+        "digest": "jfhglj"
+    }
+}}

@@ -6,10 +6,10 @@
     <artifactId>fcrepo</artifactId>
     <version>4.0-SNAPSHOT</version>
   </parent>
-  <artifactId>fcrepo-bagit-modeshape-federation-connector</artifactId>
+  <artifactId>fcrepo-databank-modeshape-federation-connector</artifactId>
 
-  <name>fcrepo-bagit-modeshape-federation-connector</name>
-  <description>Connects ModeShape to a filesystem directory containing BagIt directories.</description>
+  <name>fcrepo-databank-modeshape-federation-connector</name>
+  <description>Connects ModeShape to a filesystem directory containing Databank directories.</description>
 
   <properties>
     <modeshape.version>3.2-SNAPSHOT</modeshape.version>
@@ -51,7 +51,7 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
     </dependency>
-    <dependency>
+    <!-- <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-transports-http-jetty</artifactId>
     </dependency>
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>org.apache.cxf</groupId>
       <artifactId>cxf-rt-rs-extension-providers</artifactId>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>

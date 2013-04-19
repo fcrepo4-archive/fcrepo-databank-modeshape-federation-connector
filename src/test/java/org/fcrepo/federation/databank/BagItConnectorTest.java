@@ -34,10 +34,11 @@ import org.modeshape.jcr.value.ValueFactories;
 public class BagItConnectorTest {
 
 	BagItConnector testObj;
-		
-	DocumentWriterFactory mockFactory;
-	
-	DocumentWriter mockWriter;
+
+    // DocumentWriterFactory mockFactory;
+    DocumentWriter mockFactory;
+
+    DocumentWriter mockWriter;
 	
 	Logger mockLogger;
 	
@@ -48,9 +49,10 @@ public class BagItConnectorTest {
         throws NoSuchFieldException, SecurityException, IllegalArgumentException,
         IllegalAccessException, RepositoryException, IOException {
 		testObj = new BagItConnector();
-        testObj.setDirectoryPath("/tmp/test-objects/group1");
-		mockFactory = mock(DocumentWriterFactory.class);
-		mockWriter = mock(DocumentWriter.class);
+        testObj.setDirectoryPath("/tmp/test-objects/group1/pairtree_root");
+		// mockFactory = mock(DocumentWriterFactory.class);
+        mockFactory = mock(DocumentWriter.class);
+        mockWriter = mock(DocumentWriter.class);
 		mockLogger = mock(Logger.class);
 		
 		Field logger = Connector.class.getDeclaredField("logger");
@@ -88,11 +90,12 @@ public class BagItConnectorTest {
 		assertNotNull(bi);
 	}
     */
+
     @Test
     public void testGetDocumentPath() throws IOException {
         System.out.println("Test object directory path " + testObj.getDirectoryPath());
     }
-	
+
 	/* @Test
 	public void getDocumentById() throws IOException {
 		new File(tempDir, "foo/data").mkdirs();
@@ -105,6 +108,23 @@ public class BagItConnectorTest {
 		verify(mockFactory).getDocumentWriter("/foo/bar");
 		verify(mockWriter).setParent(eq("/foo"));
 	} */
+	@Test
+	public void testGetDocumentById() throws IOException {
+		//new File(tempDir, "foo/data").mkdirs();
+		//touch(new File(tempDir, "foo/data/bar"));
+		//when(mockFactory.getDocumentWriter(any(String.class))).thenReturn(mockWriter);
+        //testObj.getDocumentById("/");
+		//testObj.getDocumentById("/package1");
+		//verify(mockFactory).getDocumentWriter("/package1");
+		//verify(mockWriter).setParent(eq("/"));
+		testObj.getDocumentById("/package1/testDS");
+        //testObj.getDocumentById("/package1/testDS/content");
+        //testObj.getDocumentById("/package1/datastreams/testDS");
+        //testObj.getDocumentById("/package1/datastreams/testDS/content");
+		//verify(mockFactory).getDocumentWriter("/package1/testDS");
+		//verify(mockWriter).setParent(eq("/package1"));
+	}
+
 	/*
 	@Test
 	public void testFileFor() throws IOException {

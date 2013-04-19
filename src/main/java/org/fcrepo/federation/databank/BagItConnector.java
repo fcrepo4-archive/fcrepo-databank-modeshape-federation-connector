@@ -1,30 +1,11 @@
 
 package org.fcrepo.federation.bagit;
 
-import static org.fcrepo.utils.FedoraJcrTypes.FEDORA_OBJECT;
-import static org.modeshape.jcr.api.JcrConstants.JCR_CONTENT;
-import static org.modeshape.jcr.api.JcrConstants.JCR_DATA;
-import static org.modeshape.jcr.api.JcrConstants.NT_FOLDER;
-import static org.modeshape.jcr.api.JcrConstants.NT_RESOURCE;
 import gov.loc.repository.bagit.impl.FileBagFile;
 import gov.loc.repository.bagit.v0_97.impl.BagConstantsImpl;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
-
 import org.fcrepo.utils.FedoraJcrTypes;
 import org.infinispan.schematic.document.Document;
+import org.json.JSONException;
 import org.modeshape.connector.filesystem.FileSystemConnector;
 import org.modeshape.jcr.JcrI18n;
 import org.modeshape.jcr.api.JcrConstants;
@@ -35,6 +16,23 @@ import org.modeshape.jcr.federation.spi.DocumentWriter;
 import org.modeshape.jcr.value.BinaryValue;
 import org.modeshape.jcr.value.PropertyFactory;
 import org.modeshape.jcr.value.ValueFactories;
+
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.fcrepo.utils.FedoraJcrTypes.FEDORA_OBJECT;
+import static org.modeshape.jcr.api.JcrConstants.*;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class BagItConnector extends FileSystemConnector {
 	
@@ -90,7 +88,8 @@ public class BagItConnector extends FileSystemConnector {
     
     private ExecutorService threadPool;
     
-    DocumentWriterFactory m_writerFactory;
+    //DocumentWriterFactory m_writerFactory;
+    DocumentWriter m_writerFactory;
     
     public void setDirectoryPath(String directoryPath) throws RepositoryException,
             IOException {
@@ -104,6 +103,20 @@ public class BagItConnector extends FileSystemConnector {
         }
         System.out.println("Directory path set to " + this.directoryPath);
     }
+
+/*    public void setDirectoryPathForId(String id) throws RepositoryException,
+            IOException {
+        this.directoryPath = directoryPath;
+        m_directory = new File(directoryPath);
+        if (!m_directory.exists() || !m_directory.isDirectory()) {
+            String msg =
+                    JcrI18n.fileConnectorTopLevelDirectoryMissingOrCannotBeRead
+                            .text(getSourceName(), "directoryPath");
+            throw new RepositoryException(msg);
+        }
+        System.out.println("Directory path set to " + this.directoryPath);
+    }*/
+
 
     public String getDirectoryPath() {
         System.out.println("Directory path is " + this.directoryPath);
@@ -119,9 +132,12 @@ public class BagItConnector extends FileSystemConnector {
     public void initialize(NamespaceRegistry registry,
             NodeTypeManager nodeTypeManager) throws RepositoryException,
             IOException {
+        System.out.println("");
+        System.out.println("");
         getLogger().trace("Initializing at " + this.directoryPath + " ...");
         // Initialize the directory path field that has been set via reflection when this method is called...
-        m_writerFactory = new DocumentWriterFactory(translator());
+        //m_writerFactory = new DocumentWriterFactory(translator());
+        //m_writerFactory = new DocumentWriter(translator());
         checkFieldNotNull(directoryPath, "directoryPath");
         System.out.println("Directory path " + directoryPath);
         m_directory = new File(directoryPath);
@@ -164,17 +180,26 @@ public class BagItConnector extends FileSystemConnector {
     
     @Override
     public Document getDocumentById(String id) {
-        //TODO: projection root includes the silo name.
+        //TODO: projection root includes the silo name (silo_name/pairtree_root).
         // in order to avoid dealing with hierarchies in Modeshape.
         // silo name should be passed in the id??
         // Assumed silo to be group1 in test
         getLogger().trace("Entering getDocumentById()...");
+        System.out.println("Document id is " + id);
         getLogger().debug("Received request for document: " + id);
+
         final File file = fileFor(id);
+        System.out.println("Is document id excluded? " + isExcluded(file));
+        System.out.println("Does file exist? " + file.exists());
         if (isExcluded(file) || !file.exists()) return null;
-        final boolean isRoot = isRoot(id);
+        final boolean isRoot = isRoot(id);  //is it /
         final boolean isResource = isContentNode(id);
         final DocumentWriter writer = newDocument(id);
+        System.out.println("Is document id root? " + isRoot);
+        System.out.println("Is document id resource? " + isResource);
+        System.out.println("Is document id file? " + file.isFile());
+
+
         File parentFile = file.getParentFile();
         if (isRoot) {
             getLogger().debug(
@@ -249,11 +274,14 @@ public class BagItConnector extends FileSystemConnector {
         } else {
             getLogger().debug(
                     "Determined document: " + id + " to be a Fedora object.");
+            //TODO: Modify this dataDir path
             final File dataDir =
                     new File(file.getAbsolutePath() + FILE_SEPARATOR + "data");
-            getLogger().debug("searching data dir " + 
-                    dataDir.getAbsolutePath());
+            System.out.println("In else : " + file.getAbsolutePath());
+            getLogger().debug("searching data dir " + dataDir.getAbsolutePath());
+            System.out.println("In else after : " + file.getAbsolutePath());
             writer.setPrimaryType(NT_FOLDER);
+            System.out.println("In else after 2: " + file.getAbsolutePath());
             writer.addMixinType(FEDORA_OBJECT);
             writer.addMixinType(FedoraJcrTypes.FEDORA_OWNED);
             writer.addMixinType(BAGIT_ARCHIVE_TYPE);
@@ -271,18 +299,24 @@ public class BagItConnector extends FileSystemConnector {
             }
             writer.addProperty(FedoraJcrTypes.DC_IDENTIFIER, id);
             // get datastreams as children
-            for (File child : dataDir.listFiles()) {
-                // Only include as a datastream if we can access and read the file. Permissions might prevent us from
-                // reading the file, and the file might not exist if it is a broken symlink (see MODE-1768 for details).
-                if (child.exists() && child.canRead() &&
-                        (child.isFile() || child.isDirectory())) {
-                    // We use identifiers that contain the file/directory name ...
-                    String childName = child.getName();
-                    String childId =
-                            isRoot ? FILE_SEPARATOR + childName : id + FILE_SEPARATOR +
-                                    childName;
-                    writer.addChild(childId, childName);
+
+            try {
+                for (File child : dataDir.listFiles()) {
+                    // Only include as a datastream if we can access and read the file. Permissions might prevent us from
+                    // reading the file, and the file might not exist if it is a broken symlink (see MODE-1768 for details).
+                    if (child.exists() && child.canRead() &&
+                            (child.isFile() || child.isDirectory())) {
+                        // We use identifiers that contain the file/directory name ...
+                        String childName = child.getName();
+                        String childId =
+                                isRoot ? FILE_SEPARATOR + childName : id + FILE_SEPARATOR +
+                                        childName;
+                        writer.addChild(childId, childName);
+                    }
                 }
+            } catch (Throwable e) {
+                getLogger().error(e, JcrI18n.childNotFoundUnderNode,
+                        getSourceName(), id, e.getMessage());
             }
         }
 
@@ -301,7 +335,9 @@ public class BagItConnector extends FileSystemConnector {
     
     @Override
     public DocumentWriter newDocument(String id) {
-    	return m_writerFactory.getDocumentWriter(id);
+    	//return m_writerFactory.getDocumentWriter(id);
+        //m_writerFactory = new DocumentWriter(id);
+        return m_writerFactory;
     }
 
     @Override
@@ -330,6 +366,7 @@ public class BagItConnector extends FileSystemConnector {
 
     @Override
     protected File fileFor( String id ) {
+        //Removing delimiters
         assert id.startsWith(JCR_PATH_DELIMITER);
         if (id.endsWith(JCR_PATH_DELIMITER)) {
             id = id.substring(0, id.length() - JCR_PATH_DELIMITER.length());
@@ -338,19 +375,27 @@ public class BagItConnector extends FileSystemConnector {
             id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
         }
     	if ("".equals(id)) return this.m_directory; // root node
-    	
-        if (isContentNode(id)) {
-            id = id.substring(0, id.length() - JCR_CONTENT_SUFFIX_LENGTH);
-        }
-        // /{bagId}/{dsId}(/{jcr:content})?
-        Pattern p = Pattern.compile("^(\\/[^\\/]+)(\\/[^\\/]+)");
-        Matcher m = p.matcher(id);
-        if (m.find()) {
-        	id = id.replace(m.group(1), m.group(1) + FILE_SEPARATOR + "data");
-        }
 
+        // /{bagId}/{dsId}(/{jcr:content})?
+        // Retrieving object id to be made pairtree
+        Pattern p1 = Pattern.compile("^(\\/[^\\/]+)(\\/[^\\/]+)");
+        Matcher m1 = p1.matcher(id);
+        Pattern p2 = Pattern.compile("^(\\/[^\\/]+)");
+        Matcher m2 = p2.matcher(id);
+        if (m2.find()) {
+            // object id to pairtree
+            String pairtree = getPairtreePath(m2.group(1), null);
+            System.out.println("Pairtree Path of object id : " + pairtree);
+            System.out.println("Pattern matched group 1 " + m2.group(1));
+            id = pairtree + FILE_SEPARATOR + "data";
+        }
+        if (m1.find()) {
+            // Adding datastream id to it
+            System.out.println("Pattern matched group 2 " + m1.group(2));
+            id = id + m1.group(2);
+        }
     	File result = new File(this.m_directory, id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
-    	getLogger().debug(result.getAbsolutePath());
+        System.out.println("File for " + this.m_directory.getAbsolutePath() + id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
         //return super.fileFor(id);
     	return result;
     }
@@ -363,7 +408,7 @@ public class BagItConnector extends FileSystemConnector {
     
     @Override
     protected boolean isExcluded(File file) {
-    	//TODO this should check the data manifest
+    	//TODO this should check the data manifest - is this embargo info - manifest.rd in databank??
     	return !file.exists();
     }
     
@@ -419,4 +464,67 @@ public class BagItConnector extends FileSystemConnector {
         System.out.println(result);
     	return result;
     }
+
+    protected String getPairtreePath(String objId, String version) {
+        //Remove file separators from object id
+        if (objId.endsWith(FILE_SEPARATOR)) {
+            objId = objId.substring(0, objId.length() - FILE_SEPARATOR.length());
+        }
+        if (objId.startsWith(FILE_SEPARATOR)) {
+            objId = objId.substring(FILE_SEPARATOR.length(), objId.length());
+        }
+        // COnvert it to pairtree strucure
+        String[] pairtree_id = objId.split("(?<=\\G.{2})");
+        StringBuilder sb = new StringBuilder();
+        for (String s : pairtree_id) {
+            sb.append(s);
+            sb.append(FILE_SEPARATOR);
+        }
+        // Append obj to pairtree structure
+        objId = sb.toString();
+        objId =  FILE_SEPARATOR + objId + "obj";
+        System.out.println("Path computed " + objId);
+
+        File json_manifest = new File(this.m_directory, objId + FILE_SEPARATOR + "__manifest.json");
+        if (!json_manifest.exists() || !json_manifest.isFile()) {
+            String msg =
+                    JcrI18n.fileDoesNotExist.text(getSourceName(), "directoryPath");
+            throw new DocumentStoreException(json_manifest.getAbsolutePath(), msg);
+        }
+        if (version == null) {
+            // Get the latest version of the package
+            version = getCurrentVersion(json_manifest.getAbsolutePath());
+        }
+        if (version != null) {
+            objId = objId + FILE_SEPARATOR + "__" + version;
+        }
+        File version_directory = new File(this.m_directory, objId);
+        if (!version_directory.exists() || !version_directory.isDirectory()) {
+            String msg =
+                    JcrI18n.fileDoesNotExist.text(getSourceName(), "directoryPath");
+            throw new DocumentStoreException(version_directory.getAbsolutePath(), msg);
+        }
+        return objId;
+    }
+
+    protected String getCurrentVersion(String manifest_path) {
+        //System.out.println("JSON Path " + manifest_path + FILE_SEPARATOR + "__manifest.json");
+        JSONParser parser = new JSONParser();
+        JSONObject manifest = null;
+        String version = null;
+        try {
+            manifest = (JSONObject) parser.parse(new FileReader(manifest_path));
+            version = (String) manifest.get("currentversion");
+        } catch (IOException e) {
+            //e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            return version;
+        } catch (ParseException e) {
+            //e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            return version;
+        }
+        System.out.println("Manifest from json file " + manifest.toString());
+        System.out.println("Version from manifest " + version);
+        return version;
+    }
+
 }

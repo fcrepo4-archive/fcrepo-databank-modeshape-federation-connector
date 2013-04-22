@@ -1,10 +1,10 @@
-package org.fcrepo.federation.bagit.functions;
+package org.fcrepo.federation.databank.functions;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
-import org.fcrepo.federation.bagit.BagInfoTxtWriter;
+import org.fcrepo.federation.databank.BagInfoTxtWriter;
 
 import com.google.common.base.Function;
 

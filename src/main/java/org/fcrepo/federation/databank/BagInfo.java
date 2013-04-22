@@ -1,5 +1,5 @@
 
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import gov.loc.repository.bagit.Bag.BagConstants;
 import gov.loc.repository.bagit.BagFile;
@@ -10,7 +10,7 @@ import gov.loc.repository.bagit.utilities.namevalue.NameValueReader.NameValue;
 import java.io.IOException;
 import java.util.Map;
 
-import org.fcrepo.federation.bagit.functions.GetBagInfoTxtWriter;
+import org.fcrepo.federation.databank.functions.GetBagInfoTxtWriter;
 import org.modeshape.jcr.value.Name;
 import org.modeshape.jcr.value.NameFactory;
 import org.modeshape.jcr.value.Property;

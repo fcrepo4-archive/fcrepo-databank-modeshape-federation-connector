@@ -1,5 +1,5 @@
 
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import static org.slf4j.LoggerFactory.getLogger;
 

@@ -1,5 +1,5 @@
 
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import gov.loc.repository.bagit.impl.FileBagFile;
 import gov.loc.repository.bagit.v0_97.impl.BagConstantsImpl;
@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Arrays;
 
 import static org.fcrepo.utils.FedoraJcrTypes.FEDORA_OBJECT;
 import static org.modeshape.jcr.api.JcrConstants.*;
@@ -88,8 +89,8 @@ public class BagItConnector extends FileSystemConnector {
     
     private ExecutorService threadPool;
     
-    //DocumentWriterFactory m_writerFactory;
-    DocumentWriter m_writerFactory;
+    DocumentWriterFactory m_writerFactory;
+    //DocumentWriter m_writerFactory;
     
     public void setDirectoryPath(String directoryPath) throws RepositoryException,
             IOException {
@@ -103,25 +104,12 @@ public class BagItConnector extends FileSystemConnector {
         }
         System.out.println("Directory path set to " + this.directoryPath);
     }
-
-/*    public void setDirectoryPathForId(String id) throws RepositoryException,
-            IOException {
-        this.directoryPath = directoryPath;
-        m_directory = new File(directoryPath);
-        if (!m_directory.exists() || !m_directory.isDirectory()) {
-            String msg =
-                    JcrI18n.fileConnectorTopLevelDirectoryMissingOrCannotBeRead
-                            .text(getSourceName(), "directoryPath");
-            throw new RepositoryException(msg);
-        }
-        System.out.println("Directory path set to " + this.directoryPath);
-    }*/
-
-
+    /*
     public String getDirectoryPath() {
         System.out.println("Directory path is " + this.directoryPath);
         return this.directoryPath;
     }
+    */
 
     public void setDirectory(File directory) {
     	m_directory = directory;
@@ -136,8 +124,7 @@ public class BagItConnector extends FileSystemConnector {
         System.out.println("");
         getLogger().trace("Initializing at " + this.directoryPath + " ...");
         // Initialize the directory path field that has been set via reflection when this method is called...
-        //m_writerFactory = new DocumentWriterFactory(translator());
-        //m_writerFactory = new DocumentWriter(translator());
+        m_writerFactory = new DocumentWriterFactory(translator());
         checkFieldNotNull(directoryPath, "directoryPath");
         System.out.println("Directory path " + directoryPath);
         m_directory = new File(directoryPath);
@@ -180,7 +167,7 @@ public class BagItConnector extends FileSystemConnector {
     
     @Override
     public Document getDocumentById(String id) {
-        //TODO: projection root includes the silo name (silo_name/pairtree_root).
+        //TODO: projection root hard codes the silo name (silo_name/pairtree_root).
         // in order to avoid dealing with hierarchies in Modeshape.
         // silo name should be passed in the id??
         // Assumed silo to be group1 in test
@@ -274,7 +261,6 @@ public class BagItConnector extends FileSystemConnector {
         } else {
             getLogger().debug(
                     "Determined document: " + id + " to be a Fedora object.");
-            //TODO: Modify this dataDir path
             final File dataDir =
                     new File(file.getAbsolutePath() + FILE_SEPARATOR + "data");
             System.out.println("In else : " + file.getAbsolutePath());
@@ -335,9 +321,7 @@ public class BagItConnector extends FileSystemConnector {
     
     @Override
     public DocumentWriter newDocument(String id) {
-    	//return m_writerFactory.getDocumentWriter(id);
-        //m_writerFactory = new DocumentWriter(id);
-        return m_writerFactory;
+    	return m_writerFactory.getDocumentWriter(id);
     }
 
     @Override
@@ -364,6 +348,11 @@ public class BagItConnector extends FileSystemConnector {
     	// do some tagFile stuff
     }
 
+    /*
+    Method to determine the storage location on disk
+    for a given id.
+    id may point to the root or to an object or to an object datastream )
+     */
     @Override
     protected File fileFor( String id ) {
         //Removing delimiters
@@ -387,12 +376,12 @@ public class BagItConnector extends FileSystemConnector {
             String pairtree = getPairtreePath(m2.group(1), null);
             System.out.println("Pairtree Path of object id : " + pairtree);
             System.out.println("Pattern matched group 1 " + m2.group(1));
-            id = pairtree + FILE_SEPARATOR + "data";
+            id = pairtree;
         }
         if (m1.find()) {
             // Adding datastream id to it
             System.out.println("Pattern matched group 2 " + m1.group(2));
-            id = id + m1.group(2);
+            id = id + FILE_SEPARATOR + "data" + m1.group(2);
         }
     	File result = new File(this.m_directory, id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
         System.out.println("File for " + this.m_directory.getAbsolutePath() + id.replaceAll(JCR_PATH_DELIMITER, FILE_SEPARATOR));
@@ -402,13 +391,14 @@ public class BagItConnector extends FileSystemConnector {
     
     protected File bagInfoFileFor(String id) {
         File dir = fileFor(id);
+        System.out.println("Bag info for dir " + dir.getAbsolutePath());
         File result = new File(dir, "bag-info.txt");
         return (result.exists()) ? result : null;
     }
     
     @Override
     protected boolean isExcluded(File file) {
-    	//TODO this should check the data manifest - is this embargo info - manifest.rd in databank??
+    	//TODO this should check the data manifest - is this embargo info - manifest.rdf in databank??
     	return !file.exists();
     }
     
@@ -427,6 +417,7 @@ public class BagItConnector extends FileSystemConnector {
      */
     protected String idFor( File file ) {
         String path = file.getAbsolutePath();
+        System.out.println("idFor path = " + path);
         if (!path.startsWith(directoryAbsolutePath)) {
             if (m_directory.getAbsolutePath().equals(path)) {
                 // This is the root
@@ -436,6 +427,40 @@ public class BagItConnector extends FileSystemConnector {
             throw new DocumentStoreException(path, msg);
         }
         String id = path.substring(directoryAbsolutePathLength);
+
+        //Split string at /obj - before /obj points to object id, after to version number and datastream
+        String[] parts;
+        System.out.println("Pattern " + Pattern.quote(FILE_SEPARATOR + "obj"));
+        if (id.contains(FILE_SEPARATOR + "obj")) {
+            // Split it.
+            parts = id.split(Pattern.quote(FILE_SEPARATOR) + "obj");
+        } else {
+            //There is no obj dir in path. Throw exception
+            String msg = JcrI18n.fileConnectorNodeIdentifierIsNotWithinScopeOfConnector.text(getSourceName(), directoryPath, id);
+            throw new DocumentStoreException(path, msg);
+        }
+        System.out.println("Parts " + Arrays.toString(parts));
+        String objId = parts[0].replaceAll(Pattern.quote(FILE_SEPARATOR), "");
+        System.out.println("Object Id " + objId);
+        String dsId;
+        if (parts.length == 2 && parts[1].startsWith(FILE_SEPARATOR + "__")) {
+            System.out.println("Path has version");
+            Pattern p = Pattern.compile("^(\\/__[^\\/]+)");
+            Matcher m = p.matcher(parts[1]);
+            if (m.find()) {
+                System.out.println("Version regex group 1 " + m.group(1));
+                dsId =  parts[1].replace(m.group(1), "");
+                System.out.println("DS Id " + dsId);
+                id = FILE_SEPARATOR + objId + dsId;
+
+            } else {
+                System.out.println("Wrong version regex");
+                id = FILE_SEPARATOR + objId;
+            }
+        } else {
+            id = FILE_SEPARATOR + objId;
+        }
+        System.out.println("Id " + id);
         id = id.replace("/data/", "/"); // data dir should be removed from the id of a DS node
         if (id.endsWith("/data")) id = id.substring(0, id.length() - 5); // might also be the parent file of a DS node
         id = id.replaceAll(Pattern.quote(FILE_SEPARATOR), JCR_PATH_DELIMITER);
@@ -465,6 +490,9 @@ public class BagItConnector extends FileSystemConnector {
     	return result;
     }
 
+    /*
+    Method to obtain the pairtree path on disk for a given object id or datastream id
+     */
     protected String getPairtreePath(String objId, String version) {
         //Remove file separators from object id
         if (objId.endsWith(FILE_SEPARATOR)) {
@@ -473,7 +501,7 @@ public class BagItConnector extends FileSystemConnector {
         if (objId.startsWith(FILE_SEPARATOR)) {
             objId = objId.substring(FILE_SEPARATOR.length(), objId.length());
         }
-        // COnvert it to pairtree strucure
+        // Convert it to pairtree strucure
         String[] pairtree_id = objId.split("(?<=\\G.{2})");
         StringBuilder sb = new StringBuilder();
         for (String s : pairtree_id) {
@@ -507,6 +535,10 @@ public class BagItConnector extends FileSystemConnector {
         return objId;
     }
 
+    /*
+    Method to get the current version of the data package from
+    __manifest.json located at the base of the object dir
+     */
     protected String getCurrentVersion(String manifest_path) {
         //System.out.println("JSON Path " + manifest_path + FILE_SEPARATOR + "__manifest.json");
         JSONParser parser = new JSONParser();

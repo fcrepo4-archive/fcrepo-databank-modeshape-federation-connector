@@ -1,4 +1,4 @@
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import org.modeshape.jcr.cache.document.DocumentTranslator;
 import org.modeshape.jcr.federation.FederatedDocumentWriter;

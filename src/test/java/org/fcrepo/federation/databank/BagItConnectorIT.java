@@ -1,5 +1,5 @@
 
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import static org.fcrepo.jaxb.responses.access.ObjectProfile.ObjectStates.A;
 import static org.junit.Assert.assertEquals;

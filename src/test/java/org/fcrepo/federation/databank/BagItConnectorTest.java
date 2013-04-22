@@ -1,4 +1,4 @@
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,8 +35,8 @@ public class BagItConnectorTest {
 
 	BagItConnector testObj;
 
-    // DocumentWriterFactory mockFactory;
-    DocumentWriter mockFactory;
+    DocumentWriterFactory mockFactory;
+    //DocumentWriter mockFactory;
 
     DocumentWriter mockWriter;
 	
@@ -50,8 +50,8 @@ public class BagItConnectorTest {
         IllegalAccessException, RepositoryException, IOException {
 		testObj = new BagItConnector();
         testObj.setDirectoryPath("/tmp/test-objects/group1/pairtree_root");
-		// mockFactory = mock(DocumentWriterFactory.class);
-        mockFactory = mock(DocumentWriter.class);
+		mockFactory = mock(DocumentWriterFactory.class);
+        //mockFactory = mock(DocumentWriter.class);
         mockWriter = mock(DocumentWriter.class);
 		mockLogger = mock(Logger.class);
 		
@@ -79,22 +79,21 @@ public class BagItConnectorTest {
 		testObj = null;
 		//tempDir.delete();
 	}
-	/*
+
 	@Test
 	public void testGetBagInfo() throws IOException {
-		new File(tempDir, "foo").mkdirs();
-		BagInfo bi = testObj.getBagInfo("/foo");
+        System.out.println("");
+        System.out.println("");
+        System.out.println("In test testGetBagInfo");
+        System.out.println("");
+		//new File(tempDir, "foo").mkdirs();
+        //BagInfo bi = testObj.getBagInfo("/foo");
+        BagInfo bi = testObj.getBagInfo("/");
 		assertTrue(bi == null);
-		touch(new File(tempDir, "foo/bag-info.txt"));
-		bi = testObj.getBagInfo("/foo");
+		//touch(new File(tempDir, "foo/bag-info.txt"));
+        bi = testObj.getBagInfo("/package1");
 		assertNotNull(bi);
 	}
-    */
-
-    @Test
-    public void testGetDocumentPath() throws IOException {
-        System.out.println("Test object directory path " + testObj.getDirectoryPath());
-    }
 
 	/* @Test
 	public void getDocumentById() throws IOException {
@@ -108,41 +107,39 @@ public class BagItConnectorTest {
 		verify(mockFactory).getDocumentWriter("/foo/bar");
 		verify(mockWriter).setParent(eq("/foo"));
 	} */
+
 	@Test
 	public void testGetDocumentById() throws IOException {
-		//new File(tempDir, "foo/data").mkdirs();
-		//touch(new File(tempDir, "foo/data/bar"));
-		//when(mockFactory.getDocumentWriter(any(String.class))).thenReturn(mockWriter);
-        //testObj.getDocumentById("/");
-		//testObj.getDocumentById("/package1");
-		//verify(mockFactory).getDocumentWriter("/package1");
+		when(mockFactory.getDocumentWriter(any(String.class))).thenReturn(mockWriter);
+        testObj.getDocumentById("/");
+        verify(mockFactory).getDocumentWriter("/");
+        testObj.getDocumentById("/package1");
+		verify(mockFactory).getDocumentWriter("/package1");
 		//verify(mockWriter).setParent(eq("/"));
 		testObj.getDocumentById("/package1/testDS");
-        //testObj.getDocumentById("/package1/testDS/content");
-        //testObj.getDocumentById("/package1/datastreams/testDS");
-        //testObj.getDocumentById("/package1/datastreams/testDS/content");
-		//verify(mockFactory).getDocumentWriter("/package1/testDS");
+		verify(mockFactory).getDocumentWriter("/package1/testDS");
 		//verify(mockWriter).setParent(eq("/package1"));
 	}
 
-	/*
 	@Test
 	public void testFileFor() throws IOException {
-		new File(tempDir, "foo/data").mkdirs();
-		touch(new File(tempDir, "foo/data/bar"));
-		File result = testObj.fileFor("/foo/bar");
+		//new File(tempDir, "foo/data").mkdirs();
+		//touch(new File(tempDir, "foo/data/bar"));
+		//File result = testObj.fileFor("/foo/bar");
+        File result = testObj.fileFor("/package1/testDS");
 		assertTrue(result.exists());
-		assertEquals(result.getParent(), tempDir.getAbsolutePath() + "/foo/data");
+		//assertEquals(result.getParent(), tempDir.getAbsolutePath() + "/foo/data");
 	}
 
 	@Test
 	public void testIdFor() throws IOException {
-		new File(tempDir, "foo/data").mkdirs();
-		File input = (new File(tempDir, "foo/data/bar"));
+		//new File(tempDir, "foo/data").mkdirs();
+		//File input = (new File(tempDir, "foo/data/bar"));
+        File input = new File("/tmp/test-objects/group1/pairtree_root/pa/ck/ag/e1/obj/__2/data/testDS");
 		String result = testObj.idFor(input);
-		assertEquals(result, "/foo/bar");
+		assertEquals(result, "/package1/testDS");
 	}
-    */
+
 	static void touch(File file) throws IOException {
 		FileOutputStream out = new FileOutputStream(file);
 		out.write(new byte[0]);

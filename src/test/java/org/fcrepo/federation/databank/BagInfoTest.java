@@ -1,4 +1,4 @@
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-import org.fcrepo.federation.bagit.functions.GetBagInfoTxtWriter;
+import org.fcrepo.federation.databank.functions.GetBagInfoTxtWriter;
 import org.junit.Before;
 import org.junit.Test;
 import org.modeshape.jcr.value.Name;

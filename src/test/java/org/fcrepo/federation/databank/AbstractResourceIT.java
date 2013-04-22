@@ -1,5 +1,5 @@
 
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

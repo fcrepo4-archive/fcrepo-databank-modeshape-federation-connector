@@ -1,4 +1,4 @@
-package org.fcrepo.federation.bagit;
+package org.fcrepo.federation.databank;
 
 import java.io.Closeable;
 import java.io.OutputStream;

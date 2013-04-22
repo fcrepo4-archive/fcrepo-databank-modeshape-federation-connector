@@ -1,12 +1,13 @@
 package org.fcrepo.federation.databank;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import gov.loc.repository.bagit.Bag.BagConstants;
+import gov.loc.repository.bagit.BagFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,10 +22,6 @@ import org.modeshape.jcr.value.Name;
 import org.modeshape.jcr.value.NameFactory;
 import org.modeshape.jcr.value.Property;
 import org.modeshape.jcr.value.PropertyFactory;
-import org.modeshape.jcr.value.StringFactory;
-
-import gov.loc.repository.bagit.Bag.BagConstants;
-import gov.loc.repository.bagit.BagFile;
 
 public class BagInfoTest {
 
